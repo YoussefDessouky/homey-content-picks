@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Homey: اختار معايا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a working desk sheet, calm and direct, Egyptian Arabic
+   IDEA: a shared pick-sheet: Youssef's status pinned on each card, the engineer's choice beside it
+   PICTURE: the live checklist with a big progress number
+   COLOUR and TYPE: pale pink ground, ink, teal for done, claret for the pick; Cairo
+   LAYOUT: checklist band, funnel strip, series grid with filters, property-review table, copy-out box */
+:root{color-scheme:light dark;--bg:light-dark(#ffe3dc,#1c1512);--card:light-dark(#fff6f3,#2a201c);--ink:light-dark(#1a1817,#f3e9e4);--mute:light-dark(#6b5f5a,#b9a9a2);--line:light-dark(#efc9bf,#45352f);--teal:light-dark(#0d7680,#3fb3bd);--claret:light-dark(#990f3d,#e0567f);--soft:light-dark(#fbd2c7,#3a2a25)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Cairo,"Segoe UI",Tahoma,sans-serif;overflow-x:clip}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.15;margin:0 0 6px;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(24px,3vw,32px);line-height:1.2;margin:0 0 6px;font-weight:800;text-wrap:balance}
+p.lead{color:var(--mute);margin:0 0 18px;max-width:70ch}
+a{color:var(--teal);font-weight:700}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:28px;align-items:start}
+.meter{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center;position:sticky;top:14px}
+.meter b{display:block;font-size:56px;line-height:1;color:var(--teal);font-weight:800}
+.bar{height:10px;background:var(--soft);border-radius:9px;overflow:hidden;margin:12px 0 8px}.bar i{display:block;height:100%;width:0;background:var(--teal);transition:width .4s}
+.step{margin:0 0 18px}.step h3{font-size:18px;margin:0 0 8px;color:var(--claret)}
+.task{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;min-height:44px}
+.task input{width:24px;height:24px;flex:none;margin-top:3px;accent-color:var(--teal);cursor:pointer}
+.task span{flex:1}.task small{display:block;color:var(--mute);font-size:14px}
+.task.done{opacity:.6}.task.done span>strong{text-decoration:line-through}
+.task:focus-within{outline:2px solid var(--teal)}
+button{font:inherit;font-weight:700;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;min-height:44px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--teal)}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.funnel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ph{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.ph b{font-size:20px}.ph em{font-style:normal;color:var(--mute);font-size:14px;display:block}
+.ph ul{margin:8px 0 0;padding-inline-start:18px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.count{margin-inline-start:auto;font-weight:800;color:var(--claret);align-self:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.card.pick{border:2px solid var(--claret)}
+.card h4{font-size:20px;margin:0;line-height:1.35}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tag{font-size:13px;background:var(--soft);border-radius:20px;padding:2px 10px;font-weight:600}
+.tag.p{background:var(--teal);color:#fff}
+.card .lbl{font-weight:800;font-size:14px;color:var(--mute);margin-top:4px}
+.card ul{margin:0;padding-inline-start:18px}.card li{margin-bottom:4px}
+.sheet{font-size:14px;background:var(--soft);border-radius:10px;padding:8px 10px}
+.card button{margin-top:auto}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden}
+th,td{padding:12px;text-align:start;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--ink);color:var(--bg);font-size:15px}
+textarea{width:100%;min-height:180px;font:15px/1.6 Cairo,Tahoma,sans-serif;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px}
+.note{font-size:14px;color:var(--mute)}
+.scroll{overflow-x:auto}
+@media(max-width:800px){.top{grid-template-columns:1fr}.meter{position:static;order:-1}.funnel{grid-template-columns:1fr}}
+@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;white-space:normal;font-weight:700;color:var(--mute)}.stack td:empty{display:none}}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+.cats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.cat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-decoration:none;color:var(--ink);display:block}
+.cat b{display:block;font-size:18px;line-height:1.3}.cat em{font-style:normal;color:var(--mute);font-size:14px}
+.cat .n{font-size:30px;font-weight:800;color:var(--teal);line-height:1}
+.chip{font-size:13px;border-radius:20px;padding:2px 10px;font-weight:700;color:#fff}
+.chip.now{background:#375623}.chip.later{background:#b8860b}.chip.ai{background:#595959}
+.legend{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:14px;color:var(--mute)}
+.sechead{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+.meta{font-size:14px;color:var(--mute)}
+.laterbox{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:12px 16px;margin-top:14px}
+.laterbox ul{margin:6px 0 0;padding-inline-start:18px}
+.refs li{margin-bottom:6px}.refs small{display:block;color:var(--mute);font-size:13px}
+@media(max-width:1000px){.cats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.cats{grid-template-columns:1fr}}
+.who{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}
+.vote{display:flex;flex-wrap:wrap;gap:6px}.vote button{flex:1 1 90px;padding:8px 10px;min-height:44px}
+.vote button.yes.on{background:#375623;border-color:#375623;color:#fff}.vote button.no.on{background:var(--claret);border-color:var(--claret);color:#fff}.vote button.talk.on{background:#b8860b;border-color:#b8860b;color:#fff}
+.mine{font-size:14px;border-radius:10px;padding:6px 10px;background:var(--soft)}
+.note2{width:100%;min-height:44px;font:15px/1.5 Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+.banner{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.stat div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}.stat b{display:block;font-size:34px;line-height:1.1}
+@media(max-width:600px){.stat{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.btnlink{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border-radius:10px;background:#1f7a4d;color:#fff;text-decoration:none;font-weight:700}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head><body>
+<section class="band"><div class="wrap">
+ <h1>خطة محتوى Homey: اختار معايا</h1>
+ <p class="lead">دي السلاسل اللي هنجربها على السوشيال. على كل كارت مكتوب رأي يوسف (موافق ونجربها، أو لسه). اختار انت: موافق، لأ، أو نتكلم فيها، واكتب ملاحظة لو عايز. لما تخلص، دوس "ابعت اختياراتي ليوسف على واتساب" في آخر الصفحة.</p>
+ <div class="legend"><span class="chip now">يوسف: موافق ونجربها</span><span class="chip later">يوسف: لسه / بعدين</span><span class="chip ai">AI: لسه</span></div>
+ <div id="status" class="note" style="margin-top:10px" aria-live="polite">بيحمّل الاختيارات...</div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+ <div class="stat" id="stat"></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+ <h2>سؤال قبل أي حاجة</h2>
+ <div class="banner"><b>مين يقدم فيديوهات "ليه Homey" و"مين Homey"؟</b><div class="note">باقي الفيديوهات كلها يوسف هيقدمها.</div>
+ <div class="vote" style="margin-top:10px" id="pres"><button data-p="eng" class="yes">البشمهندس أحمد</button><button data-p="yousef" class="talk">يوسف</button><button data-p="both" class="no">الاتنين مع بعض</button></div>
+ <div id="presWho" class="who" style="margin-top:8px"></div></div>
+</div></section>
+<div id="sections"></div>
+<section class="band" style="padding-top:0"><div class="wrap">
+ <h2>ابعت اختياراتك ليوسف</h2>
+ <p class="lead">الصندوق ده بيتملى لوحده باللي اخترته. ابعته على واتساب أو انسخه.</p>
+ <textarea id="sum" readonly aria-label="ملخص الاختيارات" style="width:100%;min-height:200px;font:15px/1.6 Cairo,Tahoma,sans-serif;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px"></textarea>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center"><a id="wa" class="btnlink" href="https://wa.me/" target="_blank" rel="noopener">ابعت اختياراتي ليوسف على واتساب</a><button id="cp">انسخ</button><span id="cpm" class="note"></span></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap"><p class="note">الـ samples لينكات لفيديوهات منافسين وصناع محتوى، بناخد منها الستايل بس.</p></div></section>
+<script>
+{
+const CATS=[{"id": "rv", "name": "Property Reviews", "ar": "ريفيوهات الوحدات", "goal": "Traffic للويبسايت + المالك يعرض شقته", "ph": "Awareness · Engagement · Conversion", "intro": "وحدات حقيقية من على Homey: السعر، المكان، المقارنة، والمالك عارضها بنفسه. ده اللي هيجيب traffic للموقع.", "series": [{"name": "اختار معانا: 3 شقق بنفس الميزانية", "fmt": "ريل 30–45 ثانية", "freq": "مرة في الأسبوع", "st": "now", "what": "3 وحدات ريسيل بنفس الميزانية في منطقة واحدة، مقارنة سريعة (السعر، الدور، الأسانسير، المساحة)، وفي الآخر: \"تختار أنهي؟\" نبدأ بيها من الويبسايت من غير تصوير على الأرض: تسجيل شاشة لـ 3 وحدات (صورهم، السعر على الماب، الدور والأسانسير) + فويس أوفر أو مقدم في الكادر. ولما الفورمات ينجح نصورها في الوحدات نفسها.", "refs": [{"who": "Ammar Elomda", "take": "أسعار ريسيل كويسة، المقارنة بين شقة والتانية، POV، السعر في العنوان، والسؤال في الآخر", "url": "https://www.tiktok.com/@ammar__emad/video/7523567804717468936", "code": "RV_09", "st": "now"}]}, {"name": "المقدم جوه الشقة + السعر في الآخر", "fmt": "ريل 30–60 ثانية", "freq": "مرة في الأسبوع", "st": "now", "what": "مقدم على الكاميرا جوه وحدة حقيقية، أوضة بأوضة، والسعر يتكشف في الآخر على دبوس الماب في Homey.", "refs": [{"who": "Reham Tamer", "take": "الإيديت، اللبس، العرض، طريقة الكلام، والسعر في الآخر", "url": "https://www.tiktok.com/@rehamttamer/video/7639067510674967829", "code": "RV_03", "st": "now"}, {"who": "Reham Tamer (زمرة)", "take": "نفس الستايل: مثال تاني تقلده", "url": "https://www.tiktok.com/@rehamttamer/video/7693895446510505222", "code": "", "st": "now"}, {"who": "Reham Tamer", "take": "مثال تالت من نفس الستايل", "url": "https://www.tiktok.com/@rehamttamer/video/7708834516294569237", "code": "", "st": "now"}]}, {"name": "جولة في الكمبوند / المنطقة", "fmt": "ريل 45–75 ثانية", "freq": "كل أسبوعين", "st": "later", "what": "Walk-and-talk جوه كمبوند في غرب القاهرة: الموقع، الخدمات، الأسعار، وفي الآخر الماب بالأسعار على Homey.", "refs": [{"who": "Mostafa Samir", "take": "طريقة التصوير: Walk-and-talk، كلام هادي زي صاحب عارف المكان", "url": "https://www.tiktok.com/@mostafasamir500/video/7565947654765546773", "code": "RV_02", "st": "now"}, {"who": "Mostafa Samir", "take": "ستايل تاني من فيديوهاته", "url": "https://www.tiktok.com/@mostafasamir500/video/7636164877706398997", "code": "", "st": "now"}]}, {"name": "ميكس: مصطفى برّه + ريهام جوه", "fmt": "ريل 45–60 ثانية", "freq": "تجربة مرة", "st": "later", "what": "نبدأ برّه في الكمبوند بستايل مصطفى (المنطقة والخدمات)، وندخل الوحدة بستايل ريهام (المقدم، اللبس، الإيديت، والسعر في الآخر).", "refs": [{"who": "Mostafa Samir", "take": "الجزء اللي برّه: المشي والكلام عن المنطقة", "url": "https://www.tiktok.com/@mostafasamir500/video/7565947654765546773", "code": "RV_02", "st": "now"}, {"who": "Reham Tamer", "take": "الجزء اللي جوه: العرض والإيديت وكشف السعر", "url": "https://www.tiktok.com/@rehamttamer/video/7639067510674967829", "code": "RV_03", "st": "now"}]}, {"name": "ريفيو من الويبسايت", "fmt": "ريل 20–40 ثانية أو بوست صور", "freq": "2–3 مرات في الأسبوع", "st": "now", "what": "من غير تصوير: تسجيل شاشة لصفحة الوحدة بفويس أوفر، أو المالك يصور ونعمل إحنا الصوت، أو بوست صور الوحدة بكلام يسوقها (\"3 وحدات تحت 10 مليون في [المنطقة]\").", "refs": [{"who": "Zillow (How To Solve Pro)", "take": "تسجيل شاشة بفويس أوفر، أرخص حاجة", "url": "https://www.youtube.com/watch?v=rFtHjhT87MU", "code": "HT_05", "st": "now"}, {"who": "Ammar Elomda", "take": "فكرة 3 وحدات والسعر في العنوان للبوست", "url": "https://www.tiktok.com/@ammar__emad/video/7523567804717468936", "code": "RV_09", "st": "now"}]}], "later": [{"who": "Real Estate Talks", "take": "الفكرة بس (\"فكّر مرتين قبل ما تشتري\")، مش طريقة العرض", "url": "https://www.tiktok.com/@re_talks/video/7706665434954665223", "code": "RV_13", "st": "later"}, {"who": "Mazen Real Estate", "take": "وحدة اليوم من غير وش + هوك نص", "url": "https://www.tiktok.com/@mazen.realestate/video/7667733242182716693", "code": "RV_01", "st": "later"}, {"who": "Enes Yilmazer", "take": "جولات يوتيوب طويلة (بعدين، محتاجة ميزانية)", "url": "https://www.youtube.com/watch?v=B_Lnv-NDhd4", "code": "RV_08", "st": "later"}]}, {"id": "ed", "name": "Educational", "ar": "اسم داخلي بس، مش هيظهر للناس", "goal": "Awareness + ثقة: Homey مصدر معلومة", "ph": "Awareness · Engagement", "intro": "مظلة فيها سلاسل ثابتة وفيديوهات عشوائية بتعلم المالك والمشتري حاجة. كل سلسلة ليها شكل ثابت يتعرف من أول ثانية.", "series": [{"name": "Homey News في دقيقة (النشرة العقارية)", "fmt": "ريل 45–60 ثانية", "freq": "2–3 مرات في الأسبوع", "st": "now", "what": "خبر أو اتنين في دقيقة: مشاريع جديدة، إطلاقات، عروض، أخبار حكومية. نفس اللبس والخلفية كل حلقة.", "refs": [{"who": "A minute with Nawy", "take": "الفورمات: شخص واحد، موضوع واحد، 60 ثانية، ترجمة كبيرة", "url": "https://www.instagram.com/reel/DeehKjsoyDC/", "code": "SM_NW_06", "st": "now"}, {"who": "Ahmed Amer", "take": "إيقاع الأخبار الشبه يومي والكلام بالأرقام", "url": "https://www.tiktok.com/@ahmedamer_777/video/7701426390377286933", "code": "RV_04", "st": "now"}, {"who": "المخبر الاقتصادي", "take": "اللوك الثابت + بوكس كابشن لكل نقطة", "url": "https://www.facebook.com/reel/958849900609058", "code": "", "st": "now"}, {"who": "Property Finder (talk show)", "take": "لقطة قريبة للوش + كلمة كبيرة على الشاشة", "url": "https://www.instagram.com/reel/DbQSVaGOxLs/", "code": "SM_PF_13", "st": "now"}]}, {"name": "أسعار الريسيل الأسبوع ده (Weekly Resale Price News)", "fmt": "ريل 45–60 ثانية", "freq": "كل أسبوع (نفس اليوم)", "st": "now", "what": "كل أسبوع: أسعار الريسيل في 3 مناطق من على الماب في Homey، أغلى وأرخص وحدة، والمتوسط. ونفس الأرقام تنزل كاروسيل.", "refs": [{"who": "Bayut (know the market)", "take": "السيت أب والإضاءة والفكرة", "url": "https://www.instagram.com/reel/DfCtK_VkZ_S/", "code": "SM_BY_03", "st": "now"}, {"who": "Zillow (How To Solve Pro)", "take": "تسجيل شاشة للماب بفويس أوفر", "url": "https://www.youtube.com/watch?v=rFtHjhT87MU", "code": "HT_05", "st": "now"}, {"who": "المخبر الاقتصادي", "take": "بوكس كابشن لكل منطقة", "url": "https://www.facebook.com/reel/958849900609058", "code": "", "st": "now"}, {"who": "Ammar Elomda", "take": "السعر في العنوان كهوك", "url": "https://www.tiktok.com/@ammar__emad/video/7523567804717468936", "code": "RV_09", "st": "now"}]}, {"name": "معلومة في دقيقة (قبل ما تبيع أو تشتري)", "fmt": "ريل 30–60 ثانية", "freq": "مرة في الأسبوع (عشوائي)", "st": "now", "what": "نفس الستايل (شخص واحد، معلومة واحدة، أقل من دقيقة)، بس بأفكار من بزنس Homey: كل فيديو معلومة جديدة عرفناها من السوق أو من الموقع وتهم المالك أو المشتري. أمثلة: الدور والأسانسير بيفرقوا في سعر الريسيل قد إيه، إزاي تسعر شقتك من الماب، الصور اللي بتخلي إعلانك يتشاف، الفرق بين عقد ابتدائي وتوكيل، الوديعة والصيانة قبل ما تشتري. مش هننسخ أفكارهم زي ما هي.", "refs": [{"who": "Property Finder", "take": "الستايل بس: شخص واحد بيشرح ورقة واحدة قبل ما تشتري", "url": "https://www.instagram.com/reel/DeKKbT4OzSW/", "code": "SM_PF_14", "st": "now"}, {"who": "Aqar Exit", "take": "الستايل بس: \"ليه تشتري جديد بالضعف لما ممكن تشتري عقد قديم؟\"", "url": "https://www.facebook.com/reel/28135564046065430", "code": "SM_AX_03", "st": "now"}, {"who": "Zillow (Realtor John See)", "take": "الستايل بس: إزاي تقرا إعلان صح: خبير + شاشة", "url": "https://www.youtube.com/watch?v=Ha4gDM9oF68", "code": "HT_04", "st": "now"}]}, {"name": "How to use Homey", "fmt": "ريل 30–60 ثانية + نسخة يوتيوب", "freq": "مرة في الأسبوع", "st": "now", "what": "كل حلقة حاجة واحدة على الموقع: اعرض شقتك، دور على الماب بالسعر، فلتر الدور والأسانسير. الهدف إن الموقع يبقى مألوف.", "refs": [{"who": "Airbnb (phone on a stand)", "take": "موبايل حقيقي على ستاند وإيد بتدوس كل خطوة", "url": "https://www.youtube.com/watch?v=kitqe06iUnk", "code": "HT_01", "st": "now"}, {"who": "Zillow (How To Solve Pro)", "take": "تسجيل شاشة بفويس أوفر", "url": "https://www.youtube.com/watch?v=rFtHjhT87MU", "code": "HT_05", "st": "now"}, {"who": "Aqar Connect (Aqarmap)", "take": "خطوات بعناوين عربي على تسجيل الشاشة", "url": "https://www.youtube.com/watch?v=tDfGa3xCgsI", "code": "SM_AQ_04", "st": "now"}, {"who": "Bayut x influencer", "take": "إنفلونسر بيستخدم الموقع خطوة بخطوة (4.7M)", "url": "https://www.tiktok.com/@bayut_egypt/video/7544071487733452050", "code": "SM_BY_04", "st": "now"}, {"who": "Bayut (pain point)", "take": "هوك \"إعلانات كتير وسماسرة كتير؟\" وبعدين الموقع", "url": "https://www.tiktok.com/@bayut_egypt/video/7545900490152742151", "code": "SM_BY_05", "st": "now"}, {"who": "Nawy (app ad)", "take": "بنت بتتكلم برّه في كمبوند + كارت الأبليكيشن بيظهر جنبها", "url": "https://www.instagram.com/p/DfpPxx2g5ZR/", "code": "SM_NW_16", "st": "now"}]}, {"name": "إيه هي Homey وليه Homey", "fmt": "ريل 45 ثانية + بوست", "freq": "أول أسبوعين بعد الإطلاق", "st": "now", "what": "المؤسس بيقول عملنا Homey ليه: المالك يعرض بنفسه، الماب بالسعر، Homey AI.", "refs": [{"who": "Aqar Exit (founder)", "take": "المؤسس قدام الكاميرا بيحكي ليه الشركة موجودة", "url": "https://www.instagram.com/reel/DeoslW6Bx-w/", "code": "SM_AX_04", "st": "now"}]}, {"name": "بنرد على كومنتاتكم", "fmt": "ريل 30 ثانية", "freq": "أول ما الكومنتات تبدأ", "st": "later", "what": "كومنت حقيقي على الشاشة ونرد عليه في 30 ثانية. بنبدأها أول ما يبقى عندنا كومنتات بعد أول محتوى.", "refs": [{"who": "د. دينا أبو الخير", "take": "ستيكر الرد على الكومنت، موبايل على ترايبود", "url": "https://www.facebook.com/reel/1866741384297575", "code": "", "st": "later"}]}], "later": [{"who": "المخبر الاقتصادي", "take": "\"تبيع دلوقتي ولا تستنى؟\" (نعدل فيها)", "url": "https://www.facebook.com/reel/958849900609058", "code": "", "st": "later"}, {"who": "Business بالعربي + Bayut", "take": "Homey Talks: بودكاست كولاب", "url": "https://www.instagram.com/reel/Dfz19zMDyrB/", "code": "SM_BY_02", "st": "later"}]}, {"id": "ai", "name": "Ask Homey AI", "ar": "اسأل Homey AI · سلسلة أسبوعية", "goal": "Awareness لـ Homey AI + الناس تجربه", "ph": "Awareness · Engagement", "intro": "سلسلة أسبوعية بتوري Homey AI بيساعد إزاي، بشكلين بيتبدلوا كل أسبوع. مش لازم تبقى في دقيقة: الطول على حسب السؤال.", "series": [{"name": "العميل بيستخدم Homey AI", "fmt": "ريل 30–90 ثانية (حسب السؤال)", "freq": "أسبوع آه وأسبوع لأ", "st": "now", "what": "مالك أو مشتري حقيقي بيسأل Homey AI سؤاله (مثلاً \"شقتي في أكتوبر تتباع بكام؟\")، ونشوف الرد على الشاشة.", "refs": [{"who": "InstaPay creator", "take": "طريقة التصوير: كريتور مصري بيتكلم وبعدين الشاشة", "url": "https://www.youtube.com/shorts/GNHsnnihkjg", "code": "HT_03", "st": "now"}, {"who": "Bayut x influencer", "take": "إنفلونسر بيجرب المنتج قدام جمهوره", "url": "https://www.tiktok.com/@bayut_egypt/video/7544071487733452050", "code": "SM_BY_04", "st": "now"}]}, {"name": "إحنا بنسأل Homey AI", "fmt": "ريل 30–90 ثانية (حسب السؤال)", "freq": "أسبوع آه وأسبوع لأ", "st": "now", "what": "حد من فريق Homey بيسأل Homey AI سؤال الأسبوع من الكومنتات أو من السوق، والإجابة على الشاشة.", "refs": [{"who": "Baraa (مدرسة الذكاء الاصطناعي)", "take": "المونتاج: الشاشة + الوش", "url": "https://www.facebook.com/arabianaischool/reels/", "code": "", "st": "now"}, {"who": "InstaPay creator", "take": "سبليت سكرين: وش + شاشة", "url": "https://www.youtube.com/shorts/GNHsnnihkjg", "code": "HT_03", "st": "now"}]}], "later": []}, {"id": "cr", "name": "Carousels", "ar": "كاروسيل بستايل Homey", "goal": "Engagement: حفظ ومشاركة", "ph": "Engagement", "intro": "كاروسيل بقالب Homey ثابت. ناخد من ستايل كاروسيل عقارماب، ونجمع أفكار من أكتر من مكان، ونصممها على Claude بشكلنا.", "series": [{"name": "10 حاجات تعرفها قبل ما تبيع شقتك", "fmt": "كاروسيل 10 صفحات", "freq": "مرة", "st": "now", "what": "كل صفحة نقطة واحدة بجملة كبيرة وسطرين شرح: الورق، التسعير، الصور، الدور والأسانسير، التفاوض.", "refs": [{"who": "Aqarmap (Instagram)", "take": "ستايل الكاروسيل: قالب ثابت وأرقام واضحة", "url": "https://www.instagram.com/aqarmap/", "code": "", "st": "now"}, {"who": "Property Finder", "take": "المحتوى: الورق والقوانين بلغة بسيطة", "url": "https://www.instagram.com/reel/DeKKbT4OzSW/", "code": "SM_PF_14", "st": "now"}]}, {"name": "أسعار الريسيل الأسبوع ده (كاروسيل)", "fmt": "كاروسيل 5–6 صفحات", "freq": "كل أسبوع مع الفيديو", "st": "now", "what": "نفس أرقام فيديو الأسعار الأسبوعي: صفحة لكل منطقة، متوسط سعر المتر، أرخص وأغلى وحدة، وصفحة الماب في الآخر.", "refs": [{"who": "Aqarmap (Instagram)", "take": "كاروسيل متوسط سعر المتر لكل منطقة", "url": "https://www.instagram.com/aqarmap/", "code": "", "st": "now"}]}, {"name": "كاروسيل الوحدات: 3 وحدات تحت [السعر] في [المنطقة]", "fmt": "كاروسيل 4 صفحات", "freq": "مرة في الأسبوع", "st": "now", "what": "صفحة أولى بالهوك، وصفحة لكل وحدة (صورة، سعر، دور، أسانسير)، وصفحة أخيرة \"شوفها على Homey\".", "refs": [{"who": "Ammar Elomda", "take": "فكرة 3 وحدات بنفس الميزانية", "url": "https://www.tiktok.com/@ammar__emad/video/7523567804717468936", "code": "RV_09", "st": "now"}]}], "later": []}, {"id": "gx", "name": "AI Videos & Ads", "ar": "اللي متعلم عليه رمادي", "goal": "Awareness + إعلانات رخيصة", "ph": "Awareness", "intro": "فيديوهات وإعلانات قصيرة بالـ AI أو 3D أو موشن، من غير تصوير. مناسبة للإعلانات الممولة.", "series": [{"name": "موبايل والأسعار طايرة حواليه", "fmt": "15–20 ثانية", "freq": "إعلان", "st": "ai", "what": "هوك المالك \"لو بعت النهارده، هتسعرها صح؟\" + موبايل عليه الماب بالسعر والأرقام بتطير حواليه.", "refs": [{"who": "Aqarmap", "take": "هوك المالك + موبايل وأسعار طايرة", "url": "https://www.facebook.com/reel/1208654378060016", "code": "SM_AQ_01", "st": "ai"}]}, {"name": "Kinetic typography", "fmt": "15 ثانية", "freq": "إعلان", "st": "ai", "what": "كلمة عربي كبيرة بتتكرر (\"المالك... المالك... المالك\") + موبايل عليه شاشة Homey.", "refs": [{"who": "dubizzle", "take": "كلمة كبيرة بتتكرر + موبايل (559K)", "url": "https://www.facebook.com/reel/1124842040342106", "code": "SM_DB_02", "st": "ai"}]}, {"name": "باروديا 3D قصيرة", "fmt": "16 ثانية", "freq": "إعلان", "st": "ai", "what": "مشهد مصري مشهور بشكل 3D، والنهاية: المالك عرض شقته على Homey بنفسه.", "refs": [{"who": "Property Finder", "take": "باروديا 3D لمسرحية مصرية مشهورة", "url": "https://www.youtube.com/watch?v=KIfhpWvkXpE", "code": "SM_PF_15", "st": "ai"}]}, {"name": "موبايل بيفتح على بيت (3D)", "fmt": "15 ثانية", "freq": "إعلان", "st": "ai", "what": "أنيميشن بسيطة: الموبايل بيفتح على الشقة، والسعر على دبوس الماب.", "refs": [{"who": "Property Finder", "take": "أنيميشن 3D بسيطة (665K)", "url": "https://www.youtube.com/watch?v=8s5sKcBl--U", "code": "", "st": "ai"}]}], "later": []}];
+const YS={now:['now','يوسف: موافق ونجربها'],later:['later','يوسف: لسه / بعدين'],ai:['ai','AI: لسه']};
+const CH={yes:'موافق',no:'لأ',talk:'نتكلم فيها'};
+const PR={eng:'البشمهندس أحمد',yousef:'يوسف',both:'الاتنين'};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>/^https:\/\//.test(u)?u:'#';
+let db=null,user=null,me=null,votes={},names={},writable=true,busy=Promise.resolve(),local=false;
+const LK='homey-eng-picks-v1';
+function goLocal(){local=true;me='local';writable=true;try{votes={local:JSON.parse(localStorage.getItem(LK)||'null')||{picks:{},notes:{}}}}catch(e){votes={local:{picks:{},notes:{}}}};statusEl.textContent='اختار براحتك، واختياراتك بتتحفظ على الجهاز ده. في الآخر ابعتها ليوسف على واتساب.';draw()}
+const sid=(c,i)=>c.id+'-'+i;
+const statusEl=document.getElementById('status');
+function myDoc(){return votes[me]||{picks:{},notes:{}}}
+function others(){return Object.keys(votes).filter(k=>k!==me)}
+async function resolveNames(){if(!user)return;const ids=Object.keys(votes);if(me&&!ids.includes(me))ids.push(me);if(!ids.length)return;const ps=await user.profiles(ids);for(const id of ids)names[id]=ps[id].name||(id===me?'انت':'حد تاني')}
+function drawStat(){const all=CATS.flatMap((c)=>c.series.map((s,i)=>sid(c,i)));const tot=all.length;const p=myDoc().picks||{};
+ const n=k=>all.filter(x=>p[x]===k).length;
+ const box=document.getElementById('stat');box.innerHTML='';
+ [['اخترت فيها',tot-all.filter(x=>!p[x]).length+' / '+tot],['موافق',n('yes')],['لأ',n('no')],['نتكلم فيها',n('talk')]].forEach(([l,v])=>{const d=document.createElement('div');const b=document.createElement('b');b.textContent=v;d.append(b,document.createTextNode(l));box.append(d)})}
+function chipsFor(key){const wrap=document.createElement('div');wrap.className='who';
+ for(const id of Object.keys(votes)){const d=votes[id]||{};const c=key==='presenter'?d.presenter:(d.picks||{})[key];if(!c)continue;const s=document.createElement('span');s.className='mine';
+  s.textContent=(id===me?'اختيارك':(names[id]||'حد تاني'))+': '+(key==='presenter'?PR[c]:CH[c])+(key!=='presenter'&&(d.notes||{})[key]?' · '+(d.notes||{})[key]:'');wrap.append(s)}
+ return wrap}
+function drawSum(){const d=myDoc(),p=d.picks||{},n=d.notes||{};const L=['اختياراتي في خطة محتوى Homey:'];
+ if(d.presenter)L.push('مين يقدم ليه Homey / مين Homey: '+PR[d.presenter]);
+ CATS.forEach((c,ci)=>c.series.forEach((s,i)=>{const k=sid(c,i);if(p[k]||n[k])L.push('- '+s.name+': '+(p[k]?CH[p[k]]:'بدون اختيار')+(n[k]?' ('+n[k]+')':''))}));
+ if(L.length===1)L.push('لسه مااخترتش حاجة.');const t=L.join('\n');document.getElementById('sum').value=t;document.getElementById('wa').href='https://wa.me/?text='+encodeURIComponent(t)}
+function draw(){drawStat();drawSum();
+ const pp=myDoc().presenter;document.querySelectorAll('#pres button').forEach(b=>{b.classList.toggle('on',b.dataset.p===pp);b.disabled=!writable});
+ const pw=document.getElementById('presWho');pw.replaceChildren(chipsFor('presenter'));
+ const host=document.getElementById('sections');host.innerHTML=CATS.map((c,ci)=>`<section class="band" style="padding-top:0" id="${c.id}"><div class="wrap">
+ <div class="sechead"><h2>${ci+1}. ${esc(c.name)} <span class="meta">${esc(c.ar)}</span></h2><span class="meta">${esc(c.ph)}</span></div>
+ <p class="lead">${esc(c.intro)} <b>الهدف:</b> ${esc(c.goal)}.</p>
+ <div class="grid">${c.series.map((s,i)=>{const k=sid(c,i);const y=YS[s.st];const mine=(myDoc().picks||{})[k];return `<article class="card"><div class="tags"><span class="chip ${y[0]}">${y[1]}</span><span class="tag">${esc(s.fmt)}</span><span class="tag">${esc(s.freq)}</span></div>
+ <h4>${esc(s.name)}</h4><div>${esc(s.what)}</div><div class="lbl">Samples</div><ul class="refs">${s.refs.map(r=>`<li><a href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">${esc(r.who)}</a><small>${esc(r.take)}</small></li>`).join('')}</ul>
+ <div class="lbl">رأيك</div><div class="vote">${['yes','talk','no'].map(v=>`<button class="${v}${mine===v?' on':''}" data-k="${k}" data-v="${v}" ${writable?'':'disabled'}>${CH[v]}</button>`).join('')}</div>
+ <textarea class="note2" data-n="${k}" placeholder="ملاحظة (اختياري)" ${writable?'':'disabled'} aria-label="ملاحظة على ${esc(s.name)}"></textarea>
+ <div class="whoslot" data-w="${k}"></div></article>`}).join('')}</div></div></section>`).join('');
+ host.querySelectorAll('textarea[data-n]').forEach(t=>{t.value=(myDoc().notes||{})[t.dataset.n]||''});
+ host.querySelectorAll('.whoslot').forEach(w=>{const ch=chipsFor(w.dataset.w);ch.querySelectorAll('.mine').forEach(m=>{});w.replaceChildren(ch)});
+}
+function save(mut){if(local){const d=JSON.parse(JSON.stringify(myDoc()));d.picks=d.picks||{};d.notes=d.notes||{};mut(d);votes.local=d;try{localStorage.setItem(LK,JSON.stringify(d))}catch(e){}draw();return}
+ if(!db||!me){goLocal();save(mut);return}
+ const d=JSON.parse(JSON.stringify(myDoc()));d.picks=d.picks||{};d.notes=d.notes||{};mut(d);d.at=new Date().toISOString();votes[me]=d;draw();
+ busy=busy.then(()=>db.doc('votes/'+me).set(d)).then(()=>{statusEl.textContent='اتحفظ.'}).catch(e=>{if(e&&e.code==='invalid_argument'){writable=false;statusEl.textContent='عندك صلاحية تشوف بس. اطلب من يوسف يديك صلاحية Contributor علشان تختار.';draw()}else statusEl.textContent='الحفظ ماتمش، جرب تاني.'})}
+document.getElementById('sections').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b)return;const k=b.dataset.k,v=b.dataset.v;save(d=>{if(d.picks[k]===v)delete d.picks[k];else d.picks[k]=v})});
+document.getElementById('sections').addEventListener('change',e=>{const t=e.target.closest('textarea[data-n]');if(!t)return;const v=t.value.trim().slice(0,500);save(d=>{if(v)d.notes[t.dataset.n]=v;else delete d.notes[t.dataset.n]})});
+document.getElementById('pres').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;save(d=>{d.presenter=d.presenter===b.dataset.p?null:b.dataset.p})});
+document.getElementById('cp').addEventListener('click',async()=>{const m=document.getElementById('cpm'),t=document.getElementById('sum');try{await navigator.clipboard.writeText(t.value);m.textContent='اتنسخ'}catch(e){t.select();m.textContent='حدد النص وانسخه يدوي'}});
+draw();
+(async()=>{
+ if(typeof claude==='undefined'||!claude.use){goLocal();return}
+ const [u,d]=await Promise.all([claude.use('user'),claude.use('db')]);user=u;db=d;
+ if(!db){goLocal();return}
+ me=user?await user.id():null;if(!me){goLocal();return}
+ const cw=user?await user.can('data.write'):null;if(cw===false){goLocal();return}
+ const timer=setTimeout(()=>{statusEl.textContent='الاختيارات لسه مااتحملتش، ممكن تكون مش آخر نسخة.'},10000);
+ db.collection('votes').onSnapshot(async snap=>{if(!snap.metadata.fromCache)clearTimeout(timer);const nv={};snap.docs.forEach(x=>{if(x.exists)nv[x.id]=x.data()});
+  if(me&&votes[me]&&snap.metadata.hasPendingWrites)nv[me]=votes[me];votes=nv;await resolveNames();
+  if(!snap.metadata.fromCache&&writable)statusEl.textContent=Object.keys(votes).length?'آخر الاختيارات ظاهرة.':'لسه محدش اختار. ابدأ انت.';
+  const a=document.activeElement;if(a&&a.matches&&a.matches('textarea[data-n]')){drawStat();document.querySelectorAll('.whoslot').forEach(w=>w.replaceChildren(chipsFor(w.dataset.w)));document.getElementById('presWho').replaceChildren(chipsFor('presenter'));return}
+  draw()},e=>{clearTimeout(timer);statusEl.textContent='مش قادر أوصل للاختيارات دلوقتي.'});
+})();
+}
+</script>
+</body></html>
